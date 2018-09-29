@@ -13,7 +13,7 @@
                         <property name="preference" value="STANDARD_PREFERENCE"/>
                         <property name="delimiterChar" value="|"/>
                         <property name="beanType" value="io.searchpe.model.Company"/>
-                        <property name="nameMapping" value="ruc,razonSocial,estadoContribuyente,condicionDomicilio,ubigeo,tipoVia,nombreVia,codigoZona,tipoZona,numero,interior,lote,departamento,manzana,kilometro"/>
+                        <property name="nameMapping" value="ruc,razonSocial,estadoContribuyente,condicionDomicilio,ubigeo,tipoVia,nombreVia,codigoZona,tipoZona,numero,interior,lote,departamento,manzana,kilometro,otro"/>
                         <property name="cellProcessors" value="
                         null;
                         null;
@@ -32,6 +32,8 @@
                         null;
                         null;"/>
                         <property name="skipBeanValidation" value="true"/>
+                        <!--<property name="charset" value="ISO-8859-1"/>-->
+                        <property name="quoteChar" value="acxvzbcmvjvm"/>
                     </properties>
                 </reader>
                 <writer ref="jpaCompanyItemWriter">

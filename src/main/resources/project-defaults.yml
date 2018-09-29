@@ -15,4 +15,4 @@ searchpe:
     intervalDuration: 60000
     workingDirectory: "Working directory"
     maxVersions: 2
-    sunatZipURL: "https://raw.githubusercontent.com/searchpe/searchpe/master/padron_reducido_ruc.zip"
+    sunatZipURL: "http://www2.sunat.gob.pe/padron_reducido_ruc.zip"

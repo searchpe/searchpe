@@ -133,32 +133,33 @@ public class BatchScheduler {
         Path workingDirectoryPath = fileWorkingDirectory.toPath();
 
         // Cleaning
-        logger.infof("Cleaning %s", fileWorkingDirectory.getAbsolutePath());
-        org.apache.commons.io.FileUtils.cleanDirectory(fileWorkingDirectory);
+//        logger.infof("Cleaning %s", fileWorkingDirectory.getAbsolutePath());
+//        org.apache.commons.io.FileUtils.cleanDirectory(fileWorkingDirectory);
 
         // Downloading
-        File downloadedFile = workingDirectoryPath.resolve(SUNAT_ZIP_FILE_NAME).toFile();
-        logger.infof("Downloading %s into %s", sunatZipURL, downloadedFile);
-        org.apache.commons.io.FileUtils.copyURLToFile(new URL(sunatZipURL), downloadedFile, CONNECTION_TIMEOUT, READ_TIMEOUT);
+//        File downloadedFile = workingDirectoryPath.resolve(SUNAT_ZIP_FILE_NAME).toFile();
+//        logger.infof("Downloading %s into %s", sunatZipURL, downloadedFile);
+//        org.apache.commons.io.FileUtils.copyURLToFile(new URL(sunatZipURL), downloadedFile, CONNECTION_TIMEOUT, READ_TIMEOUT);
 
         // Unzip
-        Path unzipFolderPath = workingDirectoryPath.resolve("unzipFolder");
-        FileUtils.unzipFile(downloadedFile, unzipFolderPath);
-
+//        Path unzipFolderPath = workingDirectoryPath.resolve("unzipFolder");
+//        FileUtils.unzipFile(downloadedFile, unzipFolderPath);
+//
         File txtFile = null;
-        File[] files = unzipFolderPath.toFile().listFiles();
-        if (files != null) {
-            for (File file : files) {
-                String extension = FilenameUtils.getExtension(file.getName());
-                if (extension.equalsIgnoreCase("txt")) {
-                    txtFile = file;
-                    break;
-                }
-            }
-        }
-        if (txtFile == null) {
-            throw new IllegalStateException("Could not find any *.txt file to read");
-        }
+//        File[] files = unzipFolderPath.toFile().listFiles();
+//        if (files != null) {
+//            for (File file : files) {
+//                String extension = FilenameUtils.getExtension(file.getName());
+//                if (extension.equalsIgnoreCase("txt")) {
+//                    txtFile = file;
+//                    break;
+//                }
+//            }
+//        }
+        txtFile = new File("/home/admin/git/searchpe/Working directory/unzipFolder/padron_reducido_ruc.txt");
+//        if (txtFile == null) {
+//            throw new IllegalStateException("Could not find any *.txt file to read");
+//        }
 
         // Create version
         Version version = versionService.createNextVersion();

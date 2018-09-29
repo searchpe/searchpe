@@ -22,22 +22,22 @@ public class JpaCompanyItemWriter extends JpaItemWriter {
 
     @Override
     public void writeItems(List<Object> items) throws Exception {
-        if (entityTransaction) {
-            em.getTransaction().begin();
-        }
-
-        Version version = versionService.getVersion(versionId)
-                .orElseThrow(() -> new IllegalStateException("Version id[" + versionId + "] does not exists"));
-
-        for (final Object e : items) {
-            Company company = (Company) e;
-            company.setVersion(version);
-            em.persist(e);
-        }
-
-        if (entityTransaction) {
-            em.getTransaction().commit();
-        }
+//        if (entityTransaction) {
+//            em.getTransaction().begin();
+//        }
+//
+//        Version version = versionService.getVersion(versionId)
+//                .orElseThrow(() -> new IllegalStateException("Version id[" + versionId + "] does not exists"));
+//
+//        for (final Object e : items) {
+//            Company company = (Company) e;
+//            company.setVersion(version);
+//            em.persist(e);
+//        }
+//
+//        if (entityTransaction) {
+//            em.getTransaction().commit();
+//        }
     }
 
 }

@@ -88,6 +88,9 @@ public class Company {
     @Column(name = "kilometro")
     private String kilometro;
 
+    @Transient
+    private String otro;
+
     @JsonIgnore
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
@@ -228,5 +231,13 @@ public class Company {
 
     public void setVersion(io.searchpe.model.Version version) {
         this.version = version;
+    }
+
+    public String getOtro() {
+        return otro;
+    }
+
+    public void setOtro(String otro) {
+        this.otro = otro;
     }
 }
