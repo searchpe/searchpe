@@ -8,8 +8,6 @@ import org.jberet.support.io.JpaItemWriter;
 import javax.batch.api.BatchProperty;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.persistence.Column;
-import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Named

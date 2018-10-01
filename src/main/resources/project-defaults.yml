@@ -1,13 +1,26 @@
 swarm:
   datasources:
     data-sources:
-      SearchpeDS:
+      searchpe:
         jndi-name: java:jboss/datasources/SearchpeDS
         driver-name: h2
+        driver-class: org.h2.Driver
         connection-url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
         user-name: sa
         password: sa
 searchpe:
+  hibernate:
+    show-sql: false
+    format-sql: true
+  storage:
+    orm:
+      javax:
+        persistence:
+          jdbc:
+            user: sa
+            password: sa
+            url: jdbc:h2:mem:test;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+            driver: org.h2.Driver
   scheduler:
     enabled: true
     time: "12:33:00"
