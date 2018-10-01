@@ -35,7 +35,7 @@
         <dependencies>
             <dependency>
                 <groupId>io.thorntail</groupId>
-                <artifactId>bom</artifactId>
+                <artifactId>bom-all</artifactId>
                 <version>${version.wildfly.swarm}</version>
                 <scope>import</scope>
                 <type>pom</type>
@@ -73,6 +73,10 @@
         <dependency>
             <groupId>io.thorntail</groupId>
             <artifactId>batch-jberet</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>io.thorntail</groupId>
+            <artifactId>mongodb</artifactId>
         </dependency>
 
         <dependency>
