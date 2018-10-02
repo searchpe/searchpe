@@ -2,13 +2,11 @@ package io.searchpe.api.transaction;
 
 import org.jboss.logging.Logger;
 
-import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.TransactionManager;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @ApplicationScoped
 public class DefaultSearchpeTransactionManager implements SearchpeTransactionManager {

@@ -1,5 +1,6 @@
 package io.searchpe.batchs;
 
+import io.searchpe.api.provider.SearchpeSession;
 import io.searchpe.api.transaction.SearchpeTransactionManager;
 import io.searchpe.model.Version;
 import io.searchpe.services.VersionService;
@@ -73,47 +74,56 @@ public class BatchScheduler {
     private Optional<Integer> maxVersions;
 
     @Inject
-    private SearchpeTransactionManager transactionManager;
+    private SearchpeSession session;
 
     @PostConstruct
     public void initialize() {
-        transactionManager.begin();
+        try {
+            session.getTransactionManager().begin();
 
 
-        Optional<Version> lastCompletedVersion = versionService.getLastCompletedVersion();
-        if (!lastCompletedVersion.isPresent()) {
-            initBatchExecution();
-        }
-
-        if (enabled.isPresent() && enabled.get()) {
-            ZoneId zoneId = ZoneId.systemDefault();
-            if (timeZone.isPresent()) {
-                zoneId = ZoneId.of(timeZone.get());
+            Optional<Version> lastCompletedVersion = versionService.getLastCompletedVersion();
+            if (!lastCompletedVersion.isPresent()) {
+                initBatchExecution();
             }
 
-            ZonedDateTime currentDateTime = ZonedDateTime.now(zoneId);
-            LocalTime executionTime = LocalTime.parse(time.orElse(DEFAULT_EXECUTION_TIME));
-            ZonedDateTime nextExecutionDateTime = DateUtils.getNextDate(currentDateTime, executionTime);
+            if (enabled.isPresent() && enabled.get()) {
+                ZoneId zoneId = ZoneId.systemDefault();
+                if (timeZone.isPresent()) {
+                    zoneId = ZoneId.of(timeZone.get());
+                }
 
-            Timer timer = timerService.createTimer(
-                    Date.from(nextExecutionDateTime.toInstant()),
-                    intervalDuration.orElse(86_400_000L),
-                    null);
+                ZonedDateTime currentDateTime = ZonedDateTime.now(zoneId);
+                LocalTime executionTime = LocalTime.parse(time.orElse(DEFAULT_EXECUTION_TIME));
+                ZonedDateTime nextExecutionDateTime = DateUtils.getNextDate(currentDateTime, executionTime);
 
-            long timeRemaining = timer.getTimeRemaining();
-            logger.infof("Timer Next Timeout at %s", timer.getNextTimeout());
-            logger.infof("Time remaining %s milliseconds [%s hours %s minutes %s seconds]",
-                    timeRemaining,
-                    TimeUnit.MILLISECONDS.toHours(timeRemaining),
-                    TimeUnit.MILLISECONDS.toMinutes(timeRemaining),
-                    TimeUnit.MILLISECONDS.toSeconds(timeRemaining)
-            );
-        } else {
-            logger.infof("Scheduler disabled, this node will not execute schedulers");
+                Timer timer = timerService.createTimer(
+                        Date.from(nextExecutionDateTime.toInstant()),
+                        intervalDuration.orElse(86_400_000L),
+                        null);
+
+                long timeRemaining = timer.getTimeRemaining();
+                logger.infof("Timer Next Timeout at %s", timer.getNextTimeout());
+                logger.infof("Time remaining %s milliseconds [%s hours %s minutes %s seconds]",
+                        timeRemaining,
+                        TimeUnit.MILLISECONDS.toHours(timeRemaining),
+                        TimeUnit.MILLISECONDS.toMinutes(timeRemaining),
+                        TimeUnit.MILLISECONDS.toSeconds(timeRemaining)
+                );
+            } else {
+                logger.infof("Scheduler disabled, this node will not execute schedulers");
+            }
+
+
+            session.getTransactionManager().commit();
+        } catch (Exception e) {
+            if (session.getTransactionManager().isActive()) {
+                session.getTransactionManager().rollback();
+            }
+            throw e;
+        } finally {
+            session.close();
         }
-
-
-        transactionManager.commit();
     }
 
     @Timeout

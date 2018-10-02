@@ -14,7 +14,7 @@ import java.util.*;
 import java.util.function.Function;
 
 @ApplicationScoped
-public class VersionRepositoryImpl implements VersionRepository {
+public class VersionRepositoryImpl extends AbstractRepository implements VersionRepository {
 
     private final static Function<String, String> fieldsFunction = VersionRepositoryImpl::fieldName;
 
@@ -27,19 +27,19 @@ public class VersionRepositoryImpl implements VersionRepository {
 
     @Override
     public Version createVersion(Version version) {
-        em.persist(version);
-        em.flush();
+        getEntityManager().persist(version);
+        getEntityManager().flush();
         return version;
     }
 
     @Override
     public Optional<Version> getVersion(String id) {
-        return Optional.ofNullable(em.find(Version.class, id));
+        return Optional.ofNullable(getEntityManager().find(Version.class, id));
     }
 
     @Override
     public Optional<Version> getLastVersion() {
-        TypedQuery<Version> query = em.createNamedQuery("getVersions", Version.class);
+        TypedQuery<Version> query = getEntityManager().createNamedQuery("getVersions", Version.class);
         query.setMaxResults(1);
         List<Version> resultList = query.getResultList();
         if (resultList.size() == 1) {
@@ -50,7 +50,7 @@ public class VersionRepositoryImpl implements VersionRepository {
 
     @Override
     public Optional<Version> getLastCompletedVersion() {
-        TypedQuery<Version> query = em.createNamedQuery("getVersionsByCompleteStatus", Version.class);
+        TypedQuery<Version> query = getEntityManager().createNamedQuery("getVersionsByCompleteStatus", Version.class);
         query.setParameter("complete", true);
         query.setMaxResults(1);
         List<Version> resultList = query.getResultList();
@@ -62,7 +62,7 @@ public class VersionRepositoryImpl implements VersionRepository {
 
     @Override
     public List<Version> getCompleteVersionsBefore(Date date) {
-        TypedQuery<Version> query = em.createNamedQuery("getCompleteVersionsBefore", Version.class);
+        TypedQuery<Version> query = getEntityManager().createNamedQuery("getCompleteVersionsBefore", Version.class);
         query.setParameter("complete", true);
         query.setParameter("date", date);
         return query.getResultList();
@@ -70,7 +70,7 @@ public class VersionRepositoryImpl implements VersionRepository {
 
     @Override
     public List<Version> getCompleteVersionsDesc(int skip) {
-        TypedQuery<Version> query = em.createNamedQuery("getCompleteVersionsDesc", Version.class);
+        TypedQuery<Version> query = getEntityManager().createNamedQuery("getCompleteVersionsDesc", Version.class);
         query.setParameter("complete", true);
         if (skip != -1) {
             query.setFirstResult(skip);
@@ -80,16 +80,16 @@ public class VersionRepositoryImpl implements VersionRepository {
 
     @Override
     public boolean deleteVersion(Version version) {
-        em.createNamedQuery("deleteCompaniesByVersionId")
+        getEntityManager().createNamedQuery("deleteCompaniesByVersionId")
                 .setParameter("versionId", version.getId())
                 .executeUpdate();
-        em.remove(version);
+        getEntityManager().remove(version);
         return true;
     }
 
     @Override
     public List<Version> getVersionsByParameters(Map<String, Object> parameters) {
-        CriteriaBuilder criteriaBuilder = em.getCriteriaBuilder();
+        CriteriaBuilder criteriaBuilder = getEntityManager().getCriteriaBuilder();
         CriteriaQuery<Version> query = criteriaBuilder.createQuery(Version.class);
         Root<Version> root = query.from(Version.class);
 
@@ -106,13 +106,13 @@ public class VersionRepositoryImpl implements VersionRepository {
         CriteriaQuery<Version> criteriaQuery = query.select(root);
         criteriaQuery.where(predicates.toArray(new Predicate[]{}));
 
-        TypedQuery<Version> typedQuery = em.createQuery(criteriaQuery);
+        TypedQuery<Version> typedQuery = getEntityManager().createQuery(criteriaQuery);
         return typedQuery.getResultList();
     }
 
     @Override
     public Version updateVersion(Version version) {
-        em.merge(version);
+        getEntityManager().merge(version);
         return version;
     }
 }

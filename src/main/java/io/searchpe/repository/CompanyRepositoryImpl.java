@@ -11,30 +11,27 @@ import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
-public class CompanyRepositoryImpl implements CompanyRepository {
-
-    @Inject
-    private EntityManager em;
+public class CompanyRepositoryImpl extends AbstractRepository implements CompanyRepository {
 
     @Override
     public Company save(Company company) {
         if (company.getId() != null) {
-            em.persist(company);
+            getEntityManager().persist(company);
         } else {
-            em.merge(company);
+            getEntityManager().merge(company);
         }
         return company;
     }
 
     @Override
     public Optional<Company> getCompany(long id) {
-        Company company = em.find(Company.class, id);
+        Company company = getEntityManager().find(Company.class, id);
         return Optional.ofNullable(company);
     }
 
     @Override
     public Optional<Company> getCompanyByRuc(Version version, String ruc) {
-        TypedQuery<Company> query = em.createNamedQuery("getCompaniesByVersionIdAndRuc", Company.class);
+        TypedQuery<Company> query = getEntityManager().createNamedQuery("getCompaniesByVersionIdAndRuc", Company.class);
         query.setParameter("versionId", version.getId());
         query.setParameter("ruc", ruc);
 
@@ -50,7 +47,7 @@ public class CompanyRepositoryImpl implements CompanyRepository {
 
     @Override
     public List<Company> getCompanyByRazonSocial(Version version, String razonSocial) {
-        TypedQuery<Company> query = em.createNamedQuery("getCompaniesByVersionIdAndRazonSocial", Company.class);
+        TypedQuery<Company> query = getEntityManager().createNamedQuery("getCompaniesByVersionIdAndRazonSocial", Company.class);
         query.setParameter("versionId", version.getId());
         query.setParameter("razonSocial", "%" + razonSocial.toLowerCase());
 
@@ -64,7 +61,7 @@ public class CompanyRepositoryImpl implements CompanyRepository {
 
     @Override
     public List<Company> getCompanyByFilterText(Version version, String filterText, int first, int max) {
-        TypedQuery<Company> query = em.createNamedQuery("getCompaniesByVersionIdAndFilterText", Company.class);
+        TypedQuery<Company> query = getEntityManager().createNamedQuery("getCompaniesByVersionIdAndFilterText", Company.class);
         query.setParameter("versionId", version.getId());
         query.setParameter("filterText", "%" + filterText.toLowerCase() + "%");
         if(first != -1) {
