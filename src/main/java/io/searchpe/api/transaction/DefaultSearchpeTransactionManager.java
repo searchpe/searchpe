@@ -2,6 +2,7 @@ package io.searchpe.api.transaction;
 
 import org.jboss.logging.Logger;
 
+import javax.annotation.PostConstruct;
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.TransactionManager;
@@ -17,20 +18,20 @@ public class DefaultSearchpeTransactionManager implements SearchpeTransactionMan
     private ThreadLocal<List<SearchpeTransaction>> prepare = new ThreadLocal<>();
     private ThreadLocal<List<SearchpeTransaction>> transactions = new ThreadLocal<>();
     private ThreadLocal<List<SearchpeTransaction>> afterCompletion = new ThreadLocal<>();
-    private ThreadLocal<Optional<Boolean>> active = new ThreadLocal<>();
-    private ThreadLocal<Optional<Boolean>> rollback = new ThreadLocal<>();
+    private ThreadLocal<Boolean> active = new ThreadLocal<>();
+    private ThreadLocal<Boolean> rollback = new ThreadLocal<>();
 
-    private ThreadLocal<Optional<JTAPolicy>> jtaPolicy = new ThreadLocal<>();
+    private ThreadLocal<JTAPolicy> jtaPolicy = new ThreadLocal<>();
 
     // Used to prevent double committing/rollback if there is an uncaught exception
-    private ThreadLocal<Optional<Boolean>> completed = new ThreadLocal<>();
+    private ThreadLocal<Boolean> completed = new ThreadLocal<>();
 
     @Inject
     private JtaTransactionManagerLookup jtaLookup;
 
     @Override
     public void enlist(SearchpeTransaction transaction) {
-        if (active.get().orElse(false) && !transaction.isActive()) {
+        if (active.get() != null && active.get() && !transaction.isActive()) {
             transaction.begin();
         }
 
@@ -42,7 +43,7 @@ public class DefaultSearchpeTransactionManager implements SearchpeTransactionMan
 
     @Override
     public void enlistAfterCompletion(SearchpeTransaction transaction) {
-        if (active.get().orElse(false) && !transaction.isActive()) {
+        if (active.get() != null && active.get() && !transaction.isActive()) {
             transaction.begin();
         }
 
@@ -54,7 +55,7 @@ public class DefaultSearchpeTransactionManager implements SearchpeTransactionMan
 
     @Override
     public void enlistPrepare(SearchpeTransaction transaction) {
-        if (active.get().orElse(false) && !transaction.isActive()) {
+        if (active.get() != null && active.get() && !transaction.isActive()) {
             transaction.begin();
         }
 
@@ -66,25 +67,25 @@ public class DefaultSearchpeTransactionManager implements SearchpeTransactionMan
 
     @Override
     public JTAPolicy getJTAPolicy() {
-        if (!jtaPolicy.get().isPresent()) {
-            jtaPolicy.set(Optional.of(JTAPolicy.REQUIRES_NEW));
+        if (jtaPolicy.get() == null) {
+            jtaPolicy.set(JTAPolicy.REQUIRES_NEW);
         }
-        return jtaPolicy.get().get();
+        return jtaPolicy.get();
     }
 
     @Override
     public void setJTAPolicy(JTAPolicy policy) {
-        jtaPolicy.set(Optional.of(policy));
+        jtaPolicy.set(policy);
 
     }
 
     @Override
     public void begin() {
-        if (active.get().orElse(false)) {
+        if (active.get() != null && active.get()) {
             throw new IllegalStateException("Transaction already active");
         }
 
-        completed.set(Optional.of(false));
+        completed.set(false);
 
         if (getJTAPolicy().equals(JTAPolicy.REQUIRES_NEW)) {
             if (jtaLookup != null) {
@@ -95,61 +96,71 @@ public class DefaultSearchpeTransactionManager implements SearchpeTransactionMan
             }
         }
 
-        for (SearchpeTransaction tx : transactions.get()) {
-            tx.begin();
+        if (transactions.get() != null) {
+            for (SearchpeTransaction tx : transactions.get()) {
+                tx.begin();
+            }
         }
 
-        active.set(Optional.of(true));
+        active.set(true);
     }
 
     @Override
     public void commit() {
-        if (completed.get().orElse(false)) {
+        if (completed.get() != null && completed.get()) {
             return;
         } else {
-            completed.set(Optional.of(true));
+            completed.set(true);
         }
 
         RuntimeException exception = null;
-        for (SearchpeTransaction tx : prepare.get()) {
-            try {
-                tx.commit();
-            } catch (RuntimeException e) {
-                exception = exception == null ? e : exception;
-            }
-        }
-        if (exception != null) {
-            rollback(exception);
-            return;
-        }
-        for (SearchpeTransaction tx : transactions.get()) {
-            try {
-                tx.commit();
-            } catch (RuntimeException e) {
-                exception = exception == null ? e : exception;
-            }
-        }
-
-        // Don't commit "afterCompletion" if commit of some main transaction failed
-        if (exception == null) {
-            for (SearchpeTransaction tx : afterCompletion.get()) {
+        if (prepare.get() != null) {
+            for (SearchpeTransaction tx : prepare.get()) {
                 try {
                     tx.commit();
                 } catch (RuntimeException e) {
                     exception = exception == null ? e : exception;
                 }
             }
-        } else {
-            for (SearchpeTransaction tx : afterCompletion.get()) {
+        }
+        if (exception != null) {
+            rollback(exception);
+            return;
+        }
+        if (transactions.get() != null) {
+            for (SearchpeTransaction tx : transactions.get()) {
                 try {
-                    tx.rollback();
+                    tx.commit();
                 } catch (RuntimeException e) {
-                    logger.error("Exception during rollback");
+                    exception = exception == null ? e : exception;
                 }
             }
         }
 
-        active.set(Optional.of(false));
+        // Don't commit "afterCompletion" if commit of some main transaction failed
+        if (exception == null) {
+            if (afterCompletion.get() != null) {
+                for (SearchpeTransaction tx : afterCompletion.get()) {
+                    try {
+                        tx.commit();
+                    } catch (RuntimeException e) {
+                        exception = exception == null ? e : exception;
+                    }
+                }
+            }
+        } else {
+            if (afterCompletion.get() != null) {
+                for (SearchpeTransaction tx : afterCompletion.get()) {
+                    try {
+                        tx.rollback();
+                    } catch (RuntimeException e) {
+                        logger.error("Exception during rollback");
+                    }
+                }
+            }
+        }
+
+        active.set(false);
         if (exception != null) {
             throw exception;
         }
@@ -157,10 +168,10 @@ public class DefaultSearchpeTransactionManager implements SearchpeTransactionMan
 
     @Override
     public void rollback() {
-        if (completed.get().orElse(false)) {
+        if (completed.get()!= null && completed.get()) {
             return;
         } else {
-            completed.set(Optional.of(true));
+            completed.set(true);
         }
 
         RuntimeException exception = null;
@@ -168,21 +179,25 @@ public class DefaultSearchpeTransactionManager implements SearchpeTransactionMan
     }
 
     protected void rollback(RuntimeException exception) {
-        for (SearchpeTransaction tx : transactions.get()) {
-            try {
-                tx.rollback();
-            } catch (RuntimeException e) {
-                exception = exception != null ? e : exception;
+        if (transactions.get() != null) {
+            for (SearchpeTransaction tx : transactions.get()) {
+                try {
+                    tx.rollback();
+                } catch (RuntimeException e) {
+                    exception = exception != null ? e : exception;
+                }
             }
         }
-        for (SearchpeTransaction tx : afterCompletion.get()) {
-            try {
-                tx.rollback();
-            } catch (RuntimeException e) {
-                exception = exception != null ? e : exception;
+        if (afterCompletion.get() != null) {
+            for (SearchpeTransaction tx : afterCompletion.get()) {
+                try {
+                    tx.rollback();
+                } catch (RuntimeException e) {
+                    exception = exception != null ? e : exception;
+                }
             }
         }
-        active.set(Optional.of(false));
+        active.set(false);
         if (exception != null) {
             throw exception;
         }
@@ -190,18 +205,20 @@ public class DefaultSearchpeTransactionManager implements SearchpeTransactionMan
 
     @Override
     public void setRollbackOnly() {
-        rollback.set(Optional.of(true));
+        rollback.set(true);
     }
 
     @Override
     public boolean getRollbackOnly() {
-        if (rollback.get().orElse(false)) {
+        if (rollback.get() != null && rollback.get()) {
             return true;
         }
 
-        for (SearchpeTransaction tx : transactions.get()) {
-            if (tx.getRollbackOnly()) {
-                return true;
+        if (transactions.get() != null) {
+            for (SearchpeTransaction tx : transactions.get()) {
+                if (tx.getRollbackOnly()) {
+                    return true;
+                }
             }
         }
 
@@ -210,7 +227,7 @@ public class DefaultSearchpeTransactionManager implements SearchpeTransactionMan
 
     @Override
     public boolean isActive() {
-        return active.get().orElse(false);
+        return active.get() != null && active.get();
     }
 
 }

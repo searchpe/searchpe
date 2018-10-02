@@ -1,7 +1,6 @@
 package io.searchpe.batchs;
 
-import io.searchpe.api.core.IStorage;
-import io.searchpe.api.core.exceptions.StorageException;
+import io.searchpe.api.transaction.SearchpeTransactionManager;
 import io.searchpe.model.Version;
 import io.searchpe.services.VersionService;
 import io.searchpe.utils.DateUtils;
@@ -74,51 +73,47 @@ public class BatchScheduler {
     private Optional<Integer> maxVersions;
 
     @Inject
-    private IStorage storage;
+    private SearchpeTransactionManager transactionManager;
 
     @PostConstruct
     public void initialize() {
-        try {
-            storage.beginTx();
+        transactionManager.begin();
 
 
-            Optional<Version> lastCompletedVersion = versionService.getLastCompletedVersion();
-            if (!lastCompletedVersion.isPresent()) {
-                initBatchExecution();
-            }
-
-            if (enabled.isPresent() && enabled.get()) {
-                ZoneId zoneId = ZoneId.systemDefault();
-                if (timeZone.isPresent()) {
-                    zoneId = ZoneId.of(timeZone.get());
-                }
-
-                ZonedDateTime currentDateTime = ZonedDateTime.now(zoneId);
-                LocalTime executionTime = LocalTime.parse(time.orElse(DEFAULT_EXECUTION_TIME));
-                ZonedDateTime nextExecutionDateTime = DateUtils.getNextDate(currentDateTime, executionTime);
-
-                Timer timer = timerService.createTimer(
-                        Date.from(nextExecutionDateTime.toInstant()),
-                        intervalDuration.orElse(86_400_000L),
-                        null);
-
-                long timeRemaining = timer.getTimeRemaining();
-                logger.infof("Timer Next Timeout at %s", timer.getNextTimeout());
-                logger.infof("Time remaining %s milliseconds [%s hours %s minutes %s seconds]",
-                        timeRemaining,
-                        TimeUnit.MILLISECONDS.toHours(timeRemaining),
-                        TimeUnit.MILLISECONDS.toMinutes(timeRemaining),
-                        TimeUnit.MILLISECONDS.toSeconds(timeRemaining)
-                );
-            } else {
-                logger.infof("Scheduler disabled, this node will not execute schedulers");
-            }
-
-
-            storage.commitTx();
-        } catch (StorageException e) {
-            e.printStackTrace();
+        Optional<Version> lastCompletedVersion = versionService.getLastCompletedVersion();
+        if (!lastCompletedVersion.isPresent()) {
+            initBatchExecution();
         }
+
+        if (enabled.isPresent() && enabled.get()) {
+            ZoneId zoneId = ZoneId.systemDefault();
+            if (timeZone.isPresent()) {
+                zoneId = ZoneId.of(timeZone.get());
+            }
+
+            ZonedDateTime currentDateTime = ZonedDateTime.now(zoneId);
+            LocalTime executionTime = LocalTime.parse(time.orElse(DEFAULT_EXECUTION_TIME));
+            ZonedDateTime nextExecutionDateTime = DateUtils.getNextDate(currentDateTime, executionTime);
+
+            Timer timer = timerService.createTimer(
+                    Date.from(nextExecutionDateTime.toInstant()),
+                    intervalDuration.orElse(86_400_000L),
+                    null);
+
+            long timeRemaining = timer.getTimeRemaining();
+            logger.infof("Timer Next Timeout at %s", timer.getNextTimeout());
+            logger.infof("Time remaining %s milliseconds [%s hours %s minutes %s seconds]",
+                    timeRemaining,
+                    TimeUnit.MILLISECONDS.toHours(timeRemaining),
+                    TimeUnit.MILLISECONDS.toMinutes(timeRemaining),
+                    TimeUnit.MILLISECONDS.toSeconds(timeRemaining)
+            );
+        } else {
+            logger.infof("Scheduler disabled, this node will not execute schedulers");
+        }
+
+
+        transactionManager.commit();
     }
 
     @Timeout

@@ -44,7 +44,7 @@ public class JpaSearchpeTransaction implements SearchpeTransaction {
 
     @Override
     public boolean getRollbackOnly() {
-        return  em.getTransaction().getRollbackOnly();
+        return em.getTransaction().getRollbackOnly();
     }
 
     @Override

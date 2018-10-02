@@ -1,7 +1,5 @@
 package io.searchpe.api.transaction;
 
-import io.searchpe.api.transaction.JtaTransactionManagerLookup;
-
 import javax.enterprise.context.ApplicationScoped;
 import javax.inject.Inject;
 import javax.transaction.InvalidTransactionException;

@@ -11,6 +11,7 @@ import org.flywaydb.core.internal.util.jdbc.DriverDataSource;
 import org.hibernate.ejb.AvailableSettings;
 import org.hibernate.engine.transaction.jta.platform.internal.AbstractJtaPlatform;
 import org.jboss.logging.Logger;
+import org.wildfly.swarm.spi.api.config.ConfigView;
 import org.wildfly.swarm.spi.runtime.annotations.ConfigurationValue;
 
 import javax.annotation.PostConstruct;
@@ -29,12 +30,15 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.DriverManager;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @ApplicationScoped
-public class DefaultJpaConnectionFactory implements JpaConnectionProviderFactory, ServerInfoAwareProviderFactory {
+public class DefaultJpaConnectionProviderFactory implements JpaConnectionProviderFactory, ServerInfoAwareProviderFactory {
 
-    private static final Logger logger = Logger.getLogger(DefaultJpaConnectionFactory.class);
+    private static final Logger logger = Logger.getLogger(DefaultJpaConnectionProviderFactory.class);
 
     private volatile EntityManagerFactory emf;
     private Map<String, String> operationalInfo;
@@ -51,6 +55,9 @@ public class DefaultJpaConnectionFactory implements JpaConnectionProviderFactory
     private SearchpeTransactionManager transactionManager;
 
     // Data source
+
+    @Inject
+    private ConfigView configView;
 
     @Inject
     @ConfigurationValue("swarm.datasources.searchpe")
@@ -128,7 +135,7 @@ public class DefaultJpaConnectionFactory implements JpaConnectionProviderFactory
 
         EntityManager em = null;
         if (!jtaEnabled) {
-            logger.trace("enlisting EntityManager in JpaKeycloakTransaction");
+            logger.trace("enlisting EntityManager in JpaSearchpeTransaction");
             em = emf.createEntityManager();
         } else {
             em = emf.createEntityManager(SynchronizationType.SYNCHRONIZED);

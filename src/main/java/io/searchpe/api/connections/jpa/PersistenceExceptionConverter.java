@@ -35,7 +35,8 @@ public class PersistenceExceptionConverter implements InvocationHandler {
     public static ModelException convert(Throwable t) {
         if (t.getCause() != null && t.getCause() instanceof ConstraintViolationException) {
             throw new ModelDuplicateException(t);
-        } if (t instanceof EntityExistsException || t instanceof ConstraintViolationException) {
+        }
+        if (t instanceof EntityExistsException || t instanceof ConstraintViolationException) {
             throw new ModelDuplicateException(t);
         } else {
             throw new ModelException(t);

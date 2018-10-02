@@ -1,7 +1,6 @@
 package io.searchpe.api.transaction;
 
 import io.searchpe.api.provider.ExceptionConverter;
-import io.searchpe.api.provider.ProviderFactory;
 import org.jboss.logging.Logger;
 
 import javax.transaction.RollbackException;
