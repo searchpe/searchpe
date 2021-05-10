@@ -42,7 +42,7 @@
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
         <maven.compiler.parameters>true</maven.compiler.parameters>
 
-        <awaitility.version>4.0.3</awaitility.version>
+        <awaitility.version>4.1.0</awaitility.version>
         <testcontainers.version>1.15.3</testcontainers.version>
 
         <postgresql.version>13.1</postgresql.version>
