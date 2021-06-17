@@ -18,7 +18,7 @@ jobs:
       - name: Build with maven
         run: ./mvnw -DskipTests package -Pdistribution
       - name: Upload archive
-        uses: actions/upload-artifact@v2.2.3
+        uses: actions/upload-artifact@v2.2.4
         with:
           name: searchpe-distribution
           path: target/searchpe-*-distribution.zip

@@ -38,7 +38,7 @@ jobs:
         shell: bash
         run: find . -name '*-reports' -type d | tar -czvf test-reports.tgz -T -
       - name: Upload failure Archive (if maven failed)
-        uses: actions/upload-artifact@v2.2.3
+        uses: actions/upload-artifact@v2.2.4
         if: failure()
         with:
           name: test-reports-linux-jvm${{matrix.java-version}}
