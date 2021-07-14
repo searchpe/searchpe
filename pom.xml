@@ -36,7 +36,7 @@
         <quarkus.platform.group-id>io.quarkus</quarkus.platform.group-id>
         <quarkus.platform.artifact-id>quarkus-universe-bom</quarkus.platform.artifact-id>
         <quarkus-plugin.version>1.13.2.Final</quarkus-plugin.version>
-        <quarkus.platform.version>1.13.2.Final</quarkus.platform.version>
+        <quarkus.platform.version>2.0.2.Final</quarkus.platform.version>
 
         <surefire-plugin.version>2.22.2</surefire-plugin.version>
         <compiler-plugin.version>3.8.1</compiler-plugin.version>
